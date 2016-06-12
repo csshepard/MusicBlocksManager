@@ -64,3 +64,6 @@ target/
 # PyCharm Stuff
 .idea
 *~
+
+# sqlite
+*.sqlite

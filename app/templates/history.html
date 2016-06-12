@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}Music Blocks Manager - History{% endblock %}
+{% block page_content %}
+<div class="container">
+  <h2 class="sub-header">History</h2>
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Date & Time</th>
+          <th>Song Name</th>
+          <th>Block #</th>
+          <th>Length Played</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in history.items %}
+          <tr>
+            <td>{{ moment(row.time_played).format('MMMM Do YYYY, h:mm:ss a') }}</td>
+            <td>{{ row.song_title }}</td>
+            <td>{{ row.block_number }}</td>
+            <td>{{ row.length_played }}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+<ul class="pagination">
+  {{ macros.pagination_widget(history, 'main.history') }}
+</ul>
+</div>
+{% endblock %}

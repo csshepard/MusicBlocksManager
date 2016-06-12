@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Music Blocks Manager{% endblock %}
+{% block page_content %}
+<div class="container">
+  <h1 class="header">Music Blocks Manager</h1>
+  <h2 class="sub-header">Current Songs</h2>
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Block #</th>
+          <th>Song Name</th>
+          <th>Play Count</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ablock in blocks %}
+          <tr>
+            <td>{{ ablock.number }}</td>
+            <td>{{ ablock.title }}</td>
+            <td>{{ ablock.play_count }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <h2 class="sub-header">Recent History</h2>
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Date & Time</th>
+          <th>Song Name</th>
+          <th>Block #</th>
+          <th>Length Played</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in history %}
+          <tr>
+            <td>{{ moment(row.time_played).format('MMMM Do YYYY, h:mm:ss a') }}</td>
+            <td>{{ row.song_title }}</td>
+            <td>{{ row.block_number }}</td>
+            <td>{{ row.length_played }}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <h2 class="sub-header">Change Song</h2>
+  <form class="form form-inline" method="post" enctype="multipart/form-data" role="form">
+    {{ cs_form.hidden_tag() }}
+    {{ wtf.form_errors(cs_form, hiddens="only") }}
+    {{ wtf.form_field(cs_form.block_number) }}
+    {{ wtf.form_field(cs_form.song_title) }}
+    {{ wtf.form_field(cs_form.file) }}
+    {{ wtf.form_field(cs_form.submit, button_map={'submit':'primary'}) }}
+    </form>
+    </br></br>
+</div>
+{% endblock %}
+

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Music Blocks Manager - advanced{% endblock %}
+{% block page_content %}
+{{ wtf.quick_form(form, button_map={'shutdown':'primary', 'reboot':'primary', 'delete':'danger'}) }}
+
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+  $(document).ready(function(){
+    var js = "return confirm('Are you sure?  This cannot be undone.');";
+    // create a function from the "js" string
+    var newclick = new Function("return confirm('Are you sure?  This cannot be undone.');");
+
+    // clears onclick then sets click using jQuery
+    $("#delete").attr('onclick', '').click(newclick);
+  });
+</script>
+{% endblock %}
