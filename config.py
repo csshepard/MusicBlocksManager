@@ -8,6 +8,8 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     CELERY_BROKER_URL = 'redis://localhost:6379/0'
     CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+    MUSICBLOCKS_DIRECTORY = os.environ.get('MUSIC_BLOCKS_DIRECTORY') or\
+        os.path.join(basedir, 'Music/')
 
     @staticmethod
     def init_app(app):

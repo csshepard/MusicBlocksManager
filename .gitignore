@@ -67,3 +67,7 @@ target/
 
 # sqlite
 *.sqlite
+*.db
+
+# musicblocks
+*.mp3
