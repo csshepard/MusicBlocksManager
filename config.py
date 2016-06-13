@@ -6,8 +6,6 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string'
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    CELERY_BROKER_URL = 'redis://localhost:6379/0'
-    CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
     MUSICBLOCKS_DIRECTORY = os.environ.get('MUSIC_BLOCKS_DIRECTORY') or\
         os.path.join(basedir, 'Music/')
 
@@ -32,6 +30,12 @@ class TestingConfig(Config):
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, 'musicblocks.sqlite')
+
+    @classmethod
+    def init_app(cls, app):
+        Config.init_app(app)
+        from werkzeug.contrib.fixers import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app)
 
 
 config = {
