@@ -50,3 +50,12 @@ class PlayerState(db.Model):
     playing = db.Column(db.Boolean)
     volume = db.Column(db.Float)
     song_id = db.Column(db.Integer, db.ForeignKey('songs.id'))
+
+    def to_json(self):
+        player_json = {'active': self.active,
+                       'playing': self.playing,
+                       'volume': self.volume,
+                       'song': None}
+        if self.song is not None:
+            player_json['song'] = self.song.title
+        return player_json

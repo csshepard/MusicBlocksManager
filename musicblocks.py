@@ -3,8 +3,8 @@ import redis
 from subprocess import Popen, PIPE, DEVNULL, call
 from time import sleep
 from datetime import datetime, timedelta
-from . import create_app, db
-from .models import Block, Song, PlayHistory, PlayerState
+from app import create_app, db
+from app.models import Block, PlayHistory, PlayerState
 
 
 try:
