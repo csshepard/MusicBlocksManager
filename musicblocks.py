@@ -159,8 +159,8 @@ def musicblocks():
     player = Player()
     playing_uid = ''
     player_state = PlayerState.query.one()
+    player.volume = player_state.volume
     player_state.active = True
-    player_state.volume = player.volume
     player_state.playing = False
     player_state.song = None
     db.session.add(player_state)

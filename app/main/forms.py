@@ -11,7 +11,7 @@ class ChangeSong(Form):
     file = FileField('File', validators=[FileRequired(), FileAllowed(['mp3'], 'Mp3s only')])
     block_number = SelectField('Block #', validators=[DataRequired()], coerce=int)
     song_title = StringField('Song Title', validators=[DataRequired()])
-    submit = SubmitField('Submit')
+    submit = SubmitField('Change Song')
 
     def __init__(self, *args, **kwargs):
         super(ChangeSong, self).__init__(*args, **kwargs)

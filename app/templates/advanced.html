@@ -12,7 +12,7 @@
   $(document).ready(function(){
     var js = "return confirm('Are you sure?  This cannot be undone.');";
     // create a function from the "js" string
-    var newclick = new Function("return confirm('Are you sure?  This cannot be undone.');");
+    var newclick = new Function(js);
 
     // clears onclick then sets click using jQuery
     $("#delete").attr('onclick', '').click(newclick);

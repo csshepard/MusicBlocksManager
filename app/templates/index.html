@@ -49,16 +49,7 @@
       </tbody>
     </table>
   </div>
-  <h2 class="sub-header">Change Song</h2>
-  <form class="form form-inline" method="post" enctype="multipart/form-data" role="form">
-    {{ cs_form.hidden_tag() }}
-    {{ wtf.form_errors(cs_form, hiddens="only") }}
-    {{ wtf.form_field(cs_form.block_number) }}
-    {{ wtf.form_field(cs_form.song_title) }}
-    {{ wtf.form_field(cs_form.file) }}
-    {{ wtf.form_field(cs_form.submit, button_map={'submit':'primary'}) }}
-    </form>
+  
     </br></br>
 </div>
 {% endblock %}
-
