@@ -1,5 +1,6 @@
 import os
 import redis
+import atexit
 from subprocess import Popen, PIPE, DEVNULL, call
 from time import sleep
 from datetime import datetime, timedelta
@@ -149,7 +150,7 @@ def musicblocks():
         return player_state
     app = create_app(os.getenv('FLASK_CONFIG') or 'default')
     app.app_context().push()
-    commands = {b'volume': set_volume, b'stop_block': stop_block, b'execute_block': execute_block}
+    commands = {b'volume': set_volume, b'stop_block': stop_block, b'execute_block': execute_block, b'exit': None}
     music_directory = app.config['MUSICBLOCKS_DIRECTORY']
     r = redis.StrictRedis()
     messages = r.pubsub(ignore_subscribe_messages=True)
@@ -169,7 +170,10 @@ def musicblocks():
         if command is not None:
             command = command['data'].split()
             if command[0] in commands.keys():
-                player_state = commands[command[0]](player, player_state, command[-1])
+                if command[0] == b'exit':
+                    break
+                else:
+                    player_state = commands[command[0]](player, player_state, command[-1])
         try:
             uid = nfc.select()
             if playing_uid != uid:
@@ -182,5 +186,15 @@ def musicblocks():
         sleep(1)
 
 
+def exit_func():
+    player_state = PlayerState.query.one()
+    player_state.playing = False
+    player_state.song_id = None
+    player_state.active = False
+    db.session.add(player_state)
+    db.session.commit()
+
+
 if __name__ == '__main__':
+    atexit.register(exit_func)
     musicblocks()

@@ -6,7 +6,7 @@
 {{ super() }}
 <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/7.1.0/css/bootstrap-slider.min.css">
 {% endblock %}
 
 {% block navbar %}
@@ -33,6 +33,21 @@
 {% endblock %}
 
 {% block content %}
+<div class="container well well-sm">
+    <div class="row">
+        <div class="col-md-8">
+            <ul class="list-inline" id="player_status">
+                <li>Player: <span class="glyphicon" id="ps_active"></span></li>
+                <li>Currently Playing: <span id="ps_playing"></span></li>
+                <li>Volume: <span id="ps_volume"></span></li>
+            </ul>
+        </div>
+        <div class="col-md-4">
+            <input id="input-volume" data-slider-id='input-volume-Slider' type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="100"/>&nbsp;&nbsp;
+            <button id="btn-volume" class="btn btn-default" type="button">Set Volume</button>
+        </div>
+    </div>
+</div>
 <div class="container">
     {% for message in get_flashed_messages() %}
     <div class="alert alert-warning">
@@ -48,4 +63,40 @@
 {% block scripts %}
 {{ super() }}
 {{ moment.include_moment() }}
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/7.1.0/bootstrap-slider.min.js"></script>
+<script>
+var get_player_state = function() {
+    $.getJSON('{{ url_for('api.player_state') }}', function(data){
+        if(data.active){
+            $('#ps_active').removeClass('glyphicon-volume-off');
+            $('#ps_active').addClass('glyphicon-volume-up');
+            $('#btn-volume').prop('disabled', false);
+        }
+        else{
+            $('#ps_active').removeClass('glyphicon-volume-up');
+            $('#ps_active').addClass('glyphicon-volume-off');
+            $('#btn-volume').prop('disabled', true);
+        }
+        $('#ps_volume').html(data.volume);
+        if(data.playing){
+            $('#ps_playing').html(data.song);
+        }
+        else{
+            $('#ps_playing').html('Not Playing');
+        }
+    });
+};
+$(function(){
+    get_player_state();
+    setInterval(get_player_state, 1000);
+    $('#input-volume').slider({
+	formatter: function(value) {
+		return 'Current volume: ' + value;
+	}
+	});
+    $('#btn-volume').click(function(){
+        $.post('{{ url_for('api.set_volume') }}',{volume: $('#input-volume').val()});
+    });
+});
+</script>
 {% endblock %}
