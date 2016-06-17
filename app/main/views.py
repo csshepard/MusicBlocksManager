@@ -54,8 +54,8 @@ def manage():
         song_filename = secure_filename(cs_form.file.data.filename)
         song = Song.query.filter_by(file=song_filename).one_or_none()
         if song is None:
-            song = Song(title=form.song_title.data, file=song_filename)
-            form.file.data.save(current_app.config['MUSICBLOCKS_DIRECTORY'] + song_filename)
+            song = Song(title=cs_form.song_title.data, file=song_filename)
+            cs_form.file.data.save(current_app.config['MUSICBLOCKS_DIRECTORY'] + song_filename)
             db.session.add(song)
         else:
             song.title = cs_form.song_title.data
