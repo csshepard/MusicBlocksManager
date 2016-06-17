@@ -20,7 +20,6 @@ class Song(db.Model):
     title = db.Column(db.String(64))
     file = db.Column(db.String(64))
     blocks = db.relationship('Block', backref='song')
-    player = db.relationship('PlayerState', backref='song')
 
 class Command(db.Model):
     __tablename__ = 'commands'
@@ -40,22 +39,3 @@ class PlayHistory(db.Model):
     block_number = db.Column(db.Integer)
     time_played = db.Column(db.DateTime(), default=datetime.utcnow)
     length_played = db.Column(db.Interval())
-
-
-class PlayerState(db.Model):
-    __tablename__ = 'player_state'
-
-    id = db.Column(db.Integer, primary_key=True)
-    active = db.Column(db.Boolean)
-    playing = db.Column(db.Boolean)
-    volume = db.Column(db.Float)
-    song_id = db.Column(db.Integer, db.ForeignKey('songs.id'))
-
-    def to_json(self):
-        player_json = {'active': self.active,
-                       'playing': self.playing,
-                       'volume': self.volume,
-                       'song': None}
-        if self.song is not None:
-            player_json['song'] = self.song.title
-        return player_json

@@ -1,11 +1,10 @@
 import os
 import redis
-import atexit
 from subprocess import Popen, PIPE, DEVNULL, call
 from time import sleep
 from datetime import datetime, timedelta
 from app import create_app, db
-from app.models import Block, PlayHistory, PlayerState
+from app.models import Block, PlayHistory
 
 
 try:
@@ -106,15 +105,29 @@ class Player(object):
             self._player.stdin.flush()
 
 
-def musicblocks():
-    def set_volume(player, player_state, value):
-        player.volume = float(value)
-        player_state.volume = player.volume
-        db.session.add(player_state)
-        db.session.commit()
-        return player_state
+class MusicBlocks(object):
+    def __init__(self, app):
+        self.player = Player()
+        self.commands = {b'volume': self.set_volume, b'stop_block': self.stop_block, b'execute_block': self.execute_block, b'exit': None}
+        self.music_directory = app.config['MUSICBLOCKS_DIRECTORY']
+        self.nfc = nxppy.Mifare()
+        self.red = redis.StrictRedis()
+        self.messages = self.red.pubsub(ignore_subscribe_messages=True)
+        self.messages.subscribe('musicblocks')
+        self.red.set('mb_active', 'True')
+        self.red.set('mb_volume', '100')
+        self.red.publish('player_status', 'active')
 
-    def execute_block(player, player_state, block_num=None, block_uuid=None):
+
+    def set_volume(self, value):
+        if float(value) != self.player.volume:
+            self.player.volume = float(value)
+            self.red.set('mb_volume', str(self.player.volume))
+            self.red.publish('player_status', 'volume')
+            return True
+        return False
+
+    def execute_block(self, block_num=None, block_uuid=None):
         block = None
         if block_num is not None:
             block = Block.query.filter_by(number=int(block_num)).one_or_none()
@@ -122,79 +135,63 @@ def musicblocks():
             block = Block.query.filter_by(tag_uuid=block_uuid).one_or_none()
         if block:
             if block.type == 'song':
-                if player.stop_song():
+                if self.player.stop_song():
                     old_history = PlayHistory.query.order_by(PlayHistory.time_played.desc()).first()
                     old_history.length_played = datetime.utcnow() - old_history.time_played
-                    player_state.playing = False
-                    player_state.song = None
                     db.session.add(old_history)
-                if player.play_song(music_directory + block.song.file):
+                    self.red.set('mb_playing', 'Not Playing')
+                if self.player.play_song(self.music_directory + block.song.file):
                     history = PlayHistory(song_title=block.song.title,
                                           block_number=block.number)
-                    player_state.playing = True
-                    player_state.song = block.song
                     db.session.add(history)
-                db.session.add(player_state)
+                    self.red.set('mb_playing', block.song.title)
                 db.session.commit()
-        return player_state
+            self.red.publish('player_status', 'playing')
+            return True
+        return False
 
-    def stop_block(player, player_state, null=None):
-        if player.stop_song():
+    def stop_block(self):
+        if self.player.stop_song():
             old_history = PlayHistory.query.order_by(PlayHistory.time_played.desc()).first()
             old_history.length_played = datetime.utcnow() - old_history.time_played
-            player_state.playing = False
-            player_state.song = None
             db.session.add(old_history)
-            db.session.add(player_state)
             db.session.commit()
-        return player_state
-    app = create_app(os.getenv('FLASK_CONFIG') or 'default')
-    app.app_context().push()
-    commands = {b'volume': set_volume, b'stop_block': stop_block, b'execute_block': execute_block, b'exit': None}
-    music_directory = app.config['MUSICBLOCKS_DIRECTORY']
-    r = redis.StrictRedis()
-    messages = r.pubsub(ignore_subscribe_messages=True)
-    messages.subscribe('musicblocks')
-    nfc = nxppy.Mifare()
-    player = Player()
-    playing_uid = ''
-    player_state = PlayerState.query.one()
-    player.volume = player_state.volume
-    player_state.active = True
-    player_state.playing = False
-    player_state.song = None
-    db.session.add(player_state)
-    db.session.commit()
-    while True:
-        command = messages.get_message()
-        if command is not None:
-            command = command['data'].split()
-            if command[0] in commands.keys():
-                if command[0] == b'exit':
-                    break
-                else:
-                    player_state = commands[command[0]](player, player_state, command[-1])
+            self.red.set('mb_playing', 'Not Playing')
+            self.red.publish('player_status', 'playing')
+            return True
+        return False
+
+    def start(self):
+        playing_uid = ''
         try:
-            uid = nfc.select()
-            if playing_uid != uid:
-                player_state = execute_block(player, player_state, block_uuid=uid)
-                playing_uid = uid
-        except nxppy.SelectError:
-            if playing_uid != '':
-                player_state = stop_block(player, player_state)
-                playing_uid = ''
-        sleep(1)
-
-
-def exit_func():
-    player_state = PlayerState.query.one()
-    player_state.playing = False
-    player_state.song_id = None
-    player_state.active = False
-    db.session.add(player_state)
-    db.session.commit()
+            while True:
+                command = self.messages.get_message()
+                if command is not None:
+                    command = command['data'].split()
+                    if command[0] in self.commands.keys():
+                        if command[0] == b'exit':
+                            break
+                        else:
+                            player_state = self.commands[command[0]](*command[1:])
+                try:
+                    uid = self.nfc.select()
+                    if playing_uid != uid:
+                        if self.execute_block(block_uuid=uid):
+                            playing_uid = uid
+                except nxppy.SelectError:
+                    if playing_uid != '':
+                        if self.stop_block():
+                            playing_uid = ''
+                sleep(1)
+        except KeyboardInterrupt:
+            print('Exiting')
+        self.red.set('mb_active', 'False')
+        self.red.set('mb_playing', 'Not Playing')
+        self.red.publish('player_status', 'active')
 
 
 if __name__ == '__main__':
-    atexit.register(exit_func)
-    musicblocks()
+    app = create_app(os.getenv('FLASK_CONFIG') or 'default')
+    app.app_context().push()
+    musicblocks = MusicBlocks(app)
+    musicblocks.start()

@@ -32,7 +32,7 @@
       {{ wtf.form_field(cs_form.block_number, form_type="horizontal", horizontal_columns=('md',1,1)) }}
       {{ wtf.form_field(cs_form.song_title, form_type="horizontal", horizontal_columns=('md',1,6)) }}
       {{ wtf.form_field(cs_form.file, form_type="horizontal", horizontal_columns=('md',1,11)) }}
-      {{ wtf.form_field(cs_form.submit, form_type="horizontal", button_map={'submit':'primary'}) }}
+      {{ wtf.form_field(cs_form.submit, form_type="horizontal", horizontal_columns=('md',1,11), button_map={'submit':'primary'}) }}
     </form>
 </div>
     <br/>

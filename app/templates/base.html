@@ -1,6 +1,6 @@
 {% extends "bootstrap/base.html" %}
 
-{% block title %}Music Blocks{% endblock %}
+{% block title %}Music Blocks Manager{% endblock %}
 
 {% block head %}
 {{ super() }}
@@ -62,38 +62,31 @@
 {{ moment.include_moment() }}
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/7.1.0/bootstrap-slider.min.js"></script>
 <script>
-function get_player_state() {
-    $.getJSON('{{ url_for('api.player_state') }}', function(data){
-        if(data.active){
-            $('#ps_active').removeClass('glyphicon-volume-off');
-            $('#ps_active').addClass('glyphicon-volume-up');
-            $('#btn-volume').prop('disabled', false);
-        }
-        else{
-            $('#ps_active').removeClass('glyphicon-volume-up');
-            $('#ps_active').addClass('glyphicon-volume-off');
-            $('#btn-volume').prop('disabled', true);
-        }
-        $('#ps_volume').html(data.volume);
-        if(data.playing){
-            $('#ps_playing').html(data.song);
-        }
-        else{
-            $('#ps_playing').html('Not Playing');
-        }
-    });
-};
+function set_player_state(data){
+    if(data.active && !$('#ps_active').hasClass('glyphicon-volume-up')){
+        $('#ps_active').removeClass('glyphicon-volume-off');
+        $('#ps_active').addClass('glyphicon-volume-up');
+        $('#btn-volume').prop('disabled', false);
+        $('#input-volume').slider('setValue', parseFloat(data.volume))
+    }
+    else if (!data.active && !$('#ps_active').hasClass('glyphicon-volume-off')){
+        $('#ps_active').removeClass('glyphicon-volume-up');
+        $('#ps_active').addClass('glyphicon-volume-off');
+        $('#btn-volume').prop('disabled', true);
+    }
+    $('#ps_volume').html(data.volume+'%');
+    $('#ps_playing').html(data.playing);
+}
+
 $(function(){
+    status_stream = new EventSource('{{ url_for("api.player_state_stream") }}')
+    status_stream.onmessage = function(event){
+        set_player_state(JSON.parse(event.data)); }
     $('#input-volume').slider({
     	formatter: function(value) {
-    		return value;
+    		return value + '%';
     	}
     });
-    get_player_state();
-    //setInterval(get_player_state, 1000);
-    setTimeout(function(){
-        $('#input-volume').slider('setValue', parseFloat($('#ps_volume').text()))
-    }, 100);
     $('#btn-volume').click(function(){
         $.post('{{ url_for('api.set_volume') }}',{volume: $('#input-volume').val()});
     });
