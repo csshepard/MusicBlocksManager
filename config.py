@@ -37,7 +37,6 @@ class ProductionConfig(Config):
         from werkzeug.contrib.fixers import ProxyFix
         app.wsgi_app = ProxyFix(app.wsgi_app)
 
-
 config = {
     'development': DevelopmentConfig,
     'testing': TestingConfig,
