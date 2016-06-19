@@ -79,9 +79,11 @@ function set_player_state(data){
 }
 
 $(function(){
-    status_stream = new EventSource('{{ url_for("api.player_state_stream") }}')
-    status_stream.onmessage = function(event){
-        set_player_state(JSON.parse(event.data)); }
+    // status_stream = new EventSource('{{ url_for("api.player_state_stream") }}')
+    // status_stream.onmessage = function(event){
+    //     set_player_state(JSON.parse(event.data)); }
+    $.getJSON('{{ url_for("api.player_state") }}', function(data) {set_player_state(data);});
+    setInterval(function(){$.getJSON('{{ url_for("api.player_state") }}', function(data) {set_player_state(data);})},500)
     $('#input-volume').slider({
     	formatter: function(value) {
     		return value + '%';
