@@ -1,6 +1,10 @@
 import os
 import redis
-from subprocess import Popen, PIPE, DEVNULL, call
+from subprocess import Popen, PIPE, call
+try:
+    from subprocess import DEVNULL
+except ImportError:
+    DEVNULL = open(os.devnull, 'w')
 from time import sleep
 from datetime import datetime, timedelta
 from app import create_app, db
