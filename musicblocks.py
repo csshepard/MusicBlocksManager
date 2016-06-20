@@ -7,9 +7,14 @@ except ImportError:
     DEVNULL = open(os.devnull, 'w')
 from time import sleep
 from datetime import datetime, timedelta
-from app import create_app, db
-from app.models import Block, PlayHistory
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
+from models_noflask import Block, PlayHistory
+
+engine = create_engine('sqlite:///musicblocks.sqlite')
+Session = sessionmaker(bind=engine)
+session = Session()
 
 try:
     import nxppy
@@ -22,7 +27,7 @@ except ImportError:
 
         class Mifare(object):
             def __init__(self):
-                self.block_tags = [uuid for (uuid,) in Block.query.with_entities(Block.tag_uuid).all()]
+                self.block_tags = [uuid for (uuid,) in session.query(Block).with_entities(Block.tag_uuid).all()]
                 self.uuid = None
                 self.time = datetime.utcnow()
 
@@ -37,6 +42,7 @@ except ImportError:
                     raise nxppy.SelectError
                 return self.uuid
 
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Player(object):
     def __init__(self):
@@ -109,10 +115,10 @@ class Player(object):
 
 
 class MusicBlocks(object):
-    def __init__(self, app):
+    def __init__(self, db_session):
         self.player = Player()
         self.commands = {b'volume': self.set_volume, b'stop_block': self.stop_block, b'execute_block': self.execute_block, b'exit': None}
-        self.music_directory = app.config['MUSICBLOCKS_DIRECTORY']
+        self.music_directory = os.environ.get('MUSIC_BLOCKS_DIRECTORY') or os.path.join(basedir, 'Music/')
         self.nfc = nxppy.Mifare()
         self.red = redis.StrictRedis()
         self.messages = self.red.pubsub(ignore_subscribe_messages=True)
@@ -120,6 +126,7 @@ class MusicBlocks(object):
         self.red.set('mb_active', 'True')
         self.red.set('mb_volume', '100')
         self.red.publish('player_status', 'active')
+        self.db = db_session
 
 
     def set_volume(self, value):
@@ -133,32 +140,32 @@ class MusicBlocks(object):
     def execute_block(self, block_num=None, block_uuid=None):
         block = None
         if block_num is not None:
-            block = Block.query.filter_by(number=int(block_num)).one_or_none()
+            block = self.db.query(Block).filter_by(number=int(block_num)).one_or_none()
         elif block_uuid is not None:
-            block = Block.query.filter_by(tag_uuid=block_uuid).one_or_none()
+            block = self.db.query(Block).filter_by(tag_uuid=block_uuid).one_or_none()
         if block:
             if block.type == 'song':
                 if self.player.stop_song():
-                    old_history = PlayHistory.query.order_by(PlayHistory.time_played.desc()).first()
+                    old_history = self.db.query(PlayHistory).order_by(PlayHistory.time_played.desc()).first()
                     old_history.length_played = datetime.utcnow() - old_history.time_played
-                    db.session.add(old_history)
+                    self.db.add(old_history)
                     self.red.set('mb_playing', 'Not Playing')
                 if self.player.play_song(self.music_directory + block.song.file):
                     history = PlayHistory(song_title=block.song.title,
                                           block_number=block.number)
-                    db.session.add(history)
+                    self.db.add(history)
                     self.red.set('mb_playing', block.song.title)
-                db.session.commit()
+                self.db.commit()
             self.red.publish('player_status', 'playing')
             return True
         return False
 
     def stop_block(self):
         if self.player.stop_song():
-            old_history = PlayHistory.query.order_by(PlayHistory.time_played.desc()).first()
+            old_history = self.db.query(PlayHistory).order_by(PlayHistory.time_played.desc()).first()
             old_history.length_played = datetime.utcnow() - old_history.time_played
-            db.session.add(old_history)
-            db.session.commit()
+            self.db.add(old_history)
+            self.db.commit()
             self.red.set('mb_playing', 'Not Playing')
             self.red.publish('player_status', 'playing')
             return True
@@ -175,7 +182,7 @@ class MusicBlocks(object):
                         if command[0] == b'exit':
                             break
                         else:
-                            player_state = self.commands[command[0]](*command[1:])
+                            self.commands[command[0]](*command[1:])
                 try:
                     uid = self.nfc.select()
                     if playing_uid != uid:
@@ -194,7 +201,5 @@ class MusicBlocks(object):
 
 
 if __name__ == '__main__':
-    app = create_app('production')
-    app.app_context().push()
-    musicblocks = MusicBlocks(app)
+    musicblocks = MusicBlocks(session)
     musicblocks.start()
