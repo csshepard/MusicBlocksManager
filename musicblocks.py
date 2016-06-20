@@ -9,10 +9,12 @@ from time import sleep
 from datetime import datetime, timedelta
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
 from models_noflask import Block, PlayHistory
 
-engine = create_engine('sqlite:///musicblocks.sqlite')
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+engine = create_engine('sqlite:///{}/musicblocks.sqlite'.format(basedir))
 Session = sessionmaker(bind=engine)
 session = Session()
 
@@ -42,7 +44,6 @@ except ImportError:
                     raise nxppy.SelectError
                 return self.uuid
 
-basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Player(object):
     def __init__(self):
