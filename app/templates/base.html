@@ -7,6 +7,7 @@
 <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/7.1.0/css/bootstrap-slider.min.css">
+<script src="https://use.fontawesome.com/c18d6ebe3f.js"></script>
 {% endblock %}
 
 {% block navbar %}
@@ -36,7 +37,7 @@
 {% block content %}
 <div class="container-fluid well well-sm">
     <div class="row">
-        <div class="col-md-1 col-sm-1 col-xs-1"><span style='font-size: 36px' class="glyphicon" id="ps_active"></span></div>
+        <div class="col-md-1 col-sm-1 col-xs-1"><span style=" font-size: 24px; vertical-align: middle;" class="fa fa-stack"><span class="fa fa-music fa-stack-1x"></span><span id="ps_active" class="fa fa-ban text-danger fa-stack-2x"></span></span></div>
         <div style='font-size: 24px' class="col-md-4 col-sm-11 col-xs-11">Playing: <span id="ps_playing"></span></div>
         <div style='font-size: 24px' class="col-md-2 col-sm-12 col-xs-12">Volume: <span id="ps_volume"></span></div>
         <div class="col-md-5 col-sm-12 col-xs-12">
@@ -63,15 +64,13 @@
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/7.1.0/bootstrap-slider.min.js"></script>
 <script>
 function set_player_state(data){
-    if(data.active && !$('#ps_active').hasClass('glyphicon-volume-up')){
-        $('#ps_active').removeClass('glyphicon-volume-off');
-        $('#ps_active').addClass('glyphicon-volume-up');
+    if(data.active && $('#ps_active').is(':visible')){
+        $('#ps_active').hide();
         $('#btn-volume').prop('disabled', false);
         $('#input-volume').slider('setValue', parseFloat(data.volume))
     }
-    else if (!data.active && !$('#ps_active').hasClass('glyphicon-volume-off')){
-        $('#ps_active').removeClass('glyphicon-volume-up');
-        $('#ps_active').addClass('glyphicon-volume-off');
+    else if (!data.active && $('#ps_active').is(':hidden')){
+        $('#ps_active').show();
         $('#btn-volume').prop('disabled', true);
     }
     $('#ps_volume').html(data.volume+'%');
