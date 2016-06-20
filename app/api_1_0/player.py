@@ -1,6 +1,5 @@
 from flask import jsonify, request, Response, redirect, url_for
 
-from .. import db
 from ..models import Block
 from . import api, red, status
 
@@ -12,14 +11,14 @@ def state_stream():
            'data: "playing": "{playing}",\n'
            'data: "volume": {volume}\n'
            'data:}}\n\n')
-    player = {}
-    player['active'] = 'true' if red.get('mb_active')==b'True' else 'false'
-    player['playing'] = red.get('mb_playing').decode()
-    player['volume'] = float(red.get('mb_volume'))
+    player = {
+        'active': 'true' if red.get('mb_active') == b'True' else 'false',
+        'playing': red.get('mb_playing').decode(),
+        'volume': float(red.get('mb_volume'))
+    }
     yield msg.format(**player)
     for message in status.listen():
-        data = message['data'].decode()
-        player['active'] = 'true' if red.get('mb_active')==b'True' else 'false'
+        player['active'] = 'true' if red.get('mb_active') == b'True' else 'false'
         player['playing'] = red.get('mb_playing').decode()
         player['volume'] = float(red.get('mb_volume'))
         yield msg.format(**player)
@@ -49,10 +48,11 @@ def stop_block():
 
 @api.route('/player/get_state')
 def player_state():
-    player = {}
-    player['active'] = True if red.get('mb_active') == b'True' else False
-    player['playing'] = red.get('mb_playing').decode()
-    player['volume'] = float(red.get('mb_volume'))
+    player = {
+        'active': True if red.get('mb_active') == b'True' else False,
+        'playing': red.get('mb_playing').decode(),
+        'volume': float(red.get('mb_volume'))
+    }
     return jsonify(player)
 
 

@@ -15,8 +15,8 @@ def index():
         group_by(PlayHistory.song_title).subquery()
     blocks = db.session.query(Block.number, Song.title, counts.c.play_count).\
         join(Song).outerjoin(counts, Song.title == counts.c.song_title).order_by(Block.number).all()
-    history = PlayHistory.query.order_by(PlayHistory.time_played.desc()).limit(10)
-    return render_template('index.html', blocks=blocks, history=history)
+    history_10 = PlayHistory.query.order_by(PlayHistory.time_played.desc()).limit(10)
+    return render_template('index.html', blocks=blocks, history=history_10)
 
 
 @main.route('/advanced', methods=['GET', 'POST'])
@@ -43,8 +43,8 @@ def advanced():
 @main.route('/history')
 @main.route('/history/<int:page>')
 def history(page=1):
-    history = PlayHistory.query.order_by(PlayHistory.time_played.desc()).paginate(page, 10, False)
-    return render_template('history.html', history=history)
+    history_pagination = PlayHistory.query.order_by(PlayHistory.time_played.desc()).paginate(page, 10, False)
+    return render_template('history.html', history=history_pagination)
 
 
 @main.route('/manage', methods=['GET', 'POST'])

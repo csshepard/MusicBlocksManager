@@ -118,7 +118,8 @@ class Player(object):
 class MusicBlocks(object):
     def __init__(self, db_session):
         self.player = Player()
-        self.commands = {b'volume': self.set_volume, b'stop_block': self.stop_block, b'execute_block': self.execute_block, b'exit': None}
+        self.commands = {b'volume': self.set_volume, b'stop_block': self.stop_block,
+                         b'execute_block': self.execute_block, b'exit': None}
         self.music_directory = os.environ.get('MUSIC_BLOCKS_DIRECTORY') or os.path.join(basedir, 'Music/')
         self.nfc = nxppy.Mifare()
         self.red = redis.StrictRedis()
@@ -128,7 +129,6 @@ class MusicBlocks(object):
         self.red.set('mb_volume', '100')
         self.red.publish('player_status', 'active')
         self.db = db_session
-
 
     def set_volume(self, value):
         if float(value) != self.player.volume:

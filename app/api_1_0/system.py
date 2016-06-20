@@ -1,4 +1,4 @@
-from flask import jsonify, request
+from flask import redirect, url_for
 from . import api, red
 
 

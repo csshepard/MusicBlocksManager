@@ -21,6 +21,7 @@ class Song(db.Model):
     file = db.Column(db.String(64))
     blocks = db.relationship('Block', backref='song')
 
+
 class Command(db.Model):
     __tablename__ = 'commands'
 

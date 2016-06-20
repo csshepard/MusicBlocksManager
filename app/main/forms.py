@@ -2,7 +2,6 @@ from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import StringField, SelectField, SubmitField, FieldList, IntegerField, ValidationError
 from wtforms.validators import DataRequired
-from wtforms.widgets import TableWidget
 
 from ..models import Block
 
