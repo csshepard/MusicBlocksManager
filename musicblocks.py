@@ -67,7 +67,6 @@ class Player(object):
         self._player.stdin.flush()
 
     def play_song(self, path):
-        print('trying to play {}'.format(path))
         if self._quit or not os.path.isfile(path):
             return False
         self._keep_alive()
@@ -191,7 +190,7 @@ class MusicBlocks(object):
 
 
 if __name__ == '__main__':
-    app = create_app(os.getenv('FLASK_CONFIG') or 'default')
+    app = create_app('production')
     app.app_context().push()
     musicblocks = MusicBlocks(app)
     musicblocks.start()
