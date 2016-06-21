@@ -1,4 +1,9 @@
-.status_bar{
+.status-bar{
     font-size: 24px;
     text-align: center;
+    padding: 10px;
+}
+
+.active-icon{
+    vertical-align: middle;
 }
