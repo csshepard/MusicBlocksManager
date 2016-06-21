@@ -7,6 +7,7 @@
 <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/7.1.0/css/bootstrap-slider.min.css">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
 <script src="https://use.fontawesome.com/c18d6ebe3f.js"></script>
 {% endblock %}
 
@@ -35,11 +36,11 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid well well-sm">
+<div class="container-fluid well well-sm status_bar">
     <div class="row">
-        <div class="col-md-1 col-sm-1 col-xs-1"><span style=" font-size: 24px; vertical-align: middle;" class="fa fa-stack"><span class="fa fa-music fa-stack-1x"></span><span id="ps_active" class="fa fa-ban text-danger fa-stack-2x"></span></span></div>
-        <div style='font-size: 24px' class="col-md-4 col-sm-11 col-xs-11">Playing: <span id="ps_playing"></span></div>
-        <div style='font-size: 24px' class="col-md-2 col-sm-12 col-xs-12">Volume: <span id="ps_volume"></span></div>
+        <div class="col-md-1 col-sm-1 col-xs-1"><span class="fa fa-stack"><span class="fa fa-music fa-stack-1x"></span><span id="ps_active" class="fa fa-ban text-danger fa-stack-2x"></span></span></div>
+        <div class="col-md-4 col-sm-11 col-xs-11">Playing: <span id="ps_playing"></span></div>
+        <div class="col-md-2 col-sm-12 col-xs-12">Volume: <span id="ps_volume"></span></div>
         <div class="col-md-5 col-sm-12 col-xs-12">
             <input id="input-volume" data-slider-id='volumeSlider' type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="50"/>&nbsp;&nbsp;
             <button id="btn-volume" class="btn btn-default" type="button">Set Volume</button>
@@ -62,34 +63,15 @@
 {{ super() }}
 {{ moment.include_moment() }}
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/7.1.0/bootstrap-slider.min.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='script.js') }}"></script>
 <script>
-function set_player_state(data){
-    if(data.active && $('#ps_active').is(':visible')){
-        $('#ps_active').hide();
-        $('#btn-volume').prop('disabled', false);
-        $('#input-volume').slider('setValue', parseFloat(data.volume))
-    }
-    else if (!data.active && $('#ps_active').is(':hidden')){
-        $('#ps_active').show();
-        $('#btn-volume').prop('disabled', true);
-    }
-    $('#ps_volume').html(data.volume+'%');
-    $('#ps_playing').html(data.playing);
-}
-
 $(function(){
     // status_stream = new EventSource('{{ url_for("api.player_state_stream") }}')
     // status_stream.onmessage = function(event){
-    //     set_player_state(JSON.parse(event.data)); }
-    $.getJSON('{{ url_for("api.player_state") }}', function(data) {set_player_state(data);});
-    setInterval(function(){$.getJSON('{{ url_for("api.player_state") }}', function(data) {set_player_state(data);})},500)
-    $('#input-volume').slider({
-    	formatter: function(value) {
-    		return value + '%';
-    	}
-    });
+    //     setPlayerState(JSON.parse(event.data)); }
+    statusBarUpdate('{{ url_for("api.player_state") }}');
     $('#btn-volume').click(function(){
-        $.post('{{ url_for('api.set_volume') }}',{volume: $('#input-volume').val()});
+        $.post('{{ url_for("api.set_volume") }}',{volume: $('#input-volume').val()});
     });
 });
 </script>
