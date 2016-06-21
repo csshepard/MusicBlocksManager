@@ -9,6 +9,7 @@
     <table class="table table-striped">
       <thead>
         <tr>
+          <th>Play</th>
           <th>Block #</th>
           <th>Song Name</th>
           <th>Play Count</th>
@@ -17,6 +18,7 @@
       <tbody>
         {% for ablock in blocks %}
           <tr>
+            <td><button name="id" type="button" class="btn btn-default playButton" value="{{ ablock.number }}">Play</button></td>
             <td>{{ ablock.number }}</td>
             <td>{{ ablock.title }}</td>
             <td>{{ ablock.play_count }}</td>
@@ -51,4 +53,14 @@
 
     </br></br>
 </div>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+$(function(){
+    $('.playButton').click(function(){
+        $.post('{{ url_for('api.execute_block') }}', {block_number: $(this).attr('value')});
+    });
+});
+</script>
 {% endblock %}

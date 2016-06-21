@@ -40,8 +40,9 @@
     <div class="row">
         <div class="col-md-1 col-sm-1 col-xs-1"><span class="fa fa-stack fa-2x"><span class="fa fa-music fa-stack-1x active-icon"></span><span id="ps_active" class="fa fa-ban text-danger fa-stack-2x active-icon"></span></span></div>
         <div class="col-md-4 col-sm-11 col-xs-11 status-bar"><span id="ps_playing"></span></div>
-        <div class="col-md-2 col-sm-12 col-xs-12 status-bar">Volume: <span id="ps_volume"></span></div>
+        <div class="col-md-2 col-sm-12 col-xs-12 status-bar"><button id="btn-stop" class="btn btn-danger" type="button" disabled><span class="fa fa-stop"></span>  Stop</button></div>
         <div class="col-md-5 col-sm-12 col-xs-12 status-bar">
+            Volume: <span id="ps_volume"></span>
             <input id="input-volume" data-slider-id='volumeSlider' type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="50"/>&nbsp;&nbsp;
             <button id="btn-volume" class="btn btn-default" type="button" disabled >Set Volume</button>
         </div>
@@ -72,6 +73,9 @@ $(function(){
     statusBarUpdate('{{ url_for("api.player_state") }}');
     $('#btn-volume').click(function(){
         $.post('{{ url_for("api.set_volume") }}',{volume: $('#input-volume').val()});
+    });
+    $('#btn-stop').click(function(){
+        $.post('{{ url_for("api.stop_block") }}');
     });
 });
 </script>

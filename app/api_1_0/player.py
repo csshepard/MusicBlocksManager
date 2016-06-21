@@ -33,10 +33,9 @@ def set_volume():
 
 @api.route('/player/execute_block', methods=['POST'])
 def execute_block():
-    num = request.form['block_number']
-    Block.query.filter_by(number=num).one()
-    if Block is not None:
-        red.publish('musicblocks', 'execute_block {}'.format(num).encode())
+    block = Block.query.filter_by(number=request.form['block_number']).first()
+    if block is not None:
+        red.publish('musicblocks', 'execute_block {}'.format(block.number).encode())
     return redirect(url_for('.player_state'))
 
 
