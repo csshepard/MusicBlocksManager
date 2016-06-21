@@ -1,6 +1,6 @@
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired, FileAllowed
-from wtforms import StringField, SelectField, SubmitField, FieldList, IntegerField, ValidationError
+from wtforms import StringField, SelectField, SubmitField
 from wtforms.validators import DataRequired
 
 from ..models import Block
@@ -28,18 +28,3 @@ class AdvancedForm(Form):
         super(AdvancedForm, self).__init__(*args, **kwargs)
         self.block_number.choices = [(block.number, block.number)
                                      for block in Block.query.order_by(Block.number).all()]
-
-
-class ReorderForm(Form):
-    blocks = FieldList(IntegerField(), validators=[DataRequired()])
-    songs = FieldList(StringField(), validators=[DataRequired()])
-    submit = SubmitField('Reorder Blocks')
-
-    def validate_blocks(self, fields):
-            entries = set([field.data for field in fields])
-            if len(entries) != len(fields):
-                raise ValidationError("Missing Numbers")
-            block_nums = [block.number for block in Block.query.all()]
-            for entry in entries:
-                if entry not in block_nums:
-                    raise ValidationError("{} not a valid block number".format(entry))

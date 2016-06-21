@@ -3,7 +3,7 @@ from flask import url_for, render_template, redirect, flash, current_app
 from werkzeug.utils import secure_filename
 from sqlalchemy import func
 from . import main
-from .forms import ChangeSong, AdvancedForm, ReorderForm
+from .forms import ChangeSong, AdvancedForm
 from .. import db
 from ..models import Block, Song, PlayHistory
 
@@ -64,18 +64,5 @@ def manage():
         db.session.add(block)
         db.session.commit()
         return redirect(url_for('.manage'))
-    ro_form = ReorderForm()
-    if ro_form.validate_on_submit():
-        while len(ro_form.blocks):
-            block = Block.query.filter_by(number=ro_form.blocks.pop_entry().data).one()
-            song = Song.query.filter_by(title=ro_form.songs.pop_entry().data).one()
-            if block.song != song:
-                block.song = song
-                db.session.add(block)
-        db.session.commit()
-        return redirect(url_for('.manage'))
     blocks = Block.query.order_by(Block.number).all()
-    for block in blocks:
-        ro_form.blocks.append_entry(data=block.number)
-        ro_form.songs.append_entry(data=block.song.title)
-    return render_template('manage.html', blocks=blocks, ro_form=ro_form, cs_form=cs_form)
+    return render_template('manage.html', blocks=blocks, cs_form=cs_form)
