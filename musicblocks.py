@@ -191,8 +191,8 @@ class MusicBlocks(object):
                             playing_uid = uid
                 except nxppy.SelectError:
                     if playing_uid != '':
-                        if self.stop_block():
-                            playing_uid = ''
+                        self.stop_block()
+                        playing_uid = ''
                 sleep(1)
         except KeyboardInterrupt:
             print('Exiting')
