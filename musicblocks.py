@@ -11,39 +11,30 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models_noflask import Block, PlayHistory
 
+if os.path.exists('.env'):
+    print('Importing environment from .env...')
+    for line in open('.env'):
+        var = line.strip().split('=')
+        if len(var) == 2:
+            os.environ[var[0]] = var[1]
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-
-engine = create_engine('sqlite:///{}/musicblocks.sqlite'.format(basedir))
+config = os.environ.get('FLASK_CONFIG') or 'development'
+if config == 'production':
+    db_url = os.environ.get('DATABASE_URL') or 'sqlite:///{}/musicblocks.sqlite'.format(basedir)
+elif config == 'testing':
+    db_url = os.environ.get('TEST_DATABASE_URL') or 'sqlite:///{}/musicblocks-test.sqlite'.format(basedir)
+else:
+    db_url = os.environ.get('DEV_DATABASE_URL') or 'sqlite:///{}/musicblocks-dev.sqlite'.format(basedir)
+engine = create_engine(db_url)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-try:
+if os.environ.get('HARDWARE') == 'laptop' or config == 'testing':
+    import nxppy_test as nxppy
+    nxppy.Mifare.block_tags = [uuid for (uuid,block_num) in session.query(Block).with_entities(Block.tag_uuid, Block.number).order_by(Block.number).all()]
+else:
     import nxppy
-except ImportError:
-    import random
-
-    class nxppy(object):
-        class SelectError(Exception):
-            pass
-
-        class Mifare(object):
-            def __init__(self):
-                self.block_tags = [uuid for (uuid,) in session.query(Block).with_entities(Block.tag_uuid).all()]
-                self.uuid = None
-                self.time = datetime.utcnow()
-
-            def select(self):
-                if datetime.utcnow() - self.time > timedelta(seconds=15):
-                    if random.random() > 0.25:
-                        self.uuid = random.choice(self.block_tags)
-                    else:
-                        self.uuid = None
-                    self.time = datetime.utcnow()
-                if self.uuid is None:
-                    raise nxppy.SelectError
-                return self.uuid
-
 
 class Player(object):
     def __init__(self):
