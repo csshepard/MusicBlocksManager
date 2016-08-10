@@ -1,5 +1,6 @@
 import os
 import redis
+import logging, logging.handlers
 from subprocess import Popen, PIPE, call
 try:
     from subprocess import DEVNULL
@@ -11,8 +12,25 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models_noflask import Block, PlayHistory
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+fh = logging.handlers.RotatingFileHandler('musicblocks.log', maxBytes=10000, backupCount=5)
+fh.setLevel(logging.WARNING)
+
+sh = logging.StreamHandler()
+sh.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+fh.setFormatter(formatter)
+sh.setFormatter(formatter)
+
+logger.addHandler(fh)
+logger.addHandler(sh)
+
 if os.path.exists('.env'):
-    print('Importing environment from .env...')
+    logger.info('Importing environment from .env...')
     for line in open('.env'):
         var = line.strip().split('=')
         if len(var) == 2:
@@ -44,9 +62,12 @@ class Player(object):
         self.max_real_vol = 20.0
         try:
             self._player = Popen(['mpg123', '-R', 'Player'], stdin=PIPE, stdout=DEVNULL)
+            logger.info('Player Started')
         except OSError:
+            logger.warning('Player Not Installed, Installing Now')
             call(['apt-get install mpg123 -y'], shell=True)
             self._player = Popen(['mpg123', '-R', 'Player'], stdin=PIPE, stdout=DEVNULL)
+            logger.info('Player Started')
         self._player.stdin.write('SILENCE\nV {}\n'.format(self.max_real_vol).encode())
         self._player.stdin.flush()
         self._volume = 100.0
@@ -80,6 +101,7 @@ class Player(object):
         self._player.stdin.flush()
         self._playing = True
         self.current_file = path
+        logger.info('Playing %s', path)
         return True
 
     def stop_song(self):
@@ -90,6 +112,7 @@ class Player(object):
         self._player.stdin.flush()
         self._playing = False
         self.current_file = ''
+        logger.info('Stopped Playing')
         return True
 
     def is_playing(self):
@@ -100,12 +123,15 @@ class Player(object):
             self._keep_alive()
             self._player.communicate('S\nQ\n'.encode())
             self._quit = True
+            logger.warning('Player Quit')
 
     def _keep_alive(self):
         if self._player.poll() is not None:
+            logger.warning('Player Crashed. Restarting')
             self._player = Popen(['mpg123', '-R', 'Player'], stdin=PIPE, stdout=DEVNULL)
             self._player.stdin.write('SILENCE\nV {}\n'.format(self._volume).encode())
             self._player.stdin.flush()
+            logger.warning('Player Restarted')
 
 
 class MusicBlocks(object):
@@ -128,6 +154,7 @@ class MusicBlocks(object):
             self.player.volume = float(value)
             self.red.set('mb_volume', str(self.player.volume))
             self.red.publish('player_status', 'volume')
+            logger.info('Volume Changed to %s', self.player.volume)
             return True
         return False
 
@@ -138,6 +165,7 @@ class MusicBlocks(object):
         elif block_uuid is not None:
             block = self.db.query(Block).filter_by(tag_uuid=block_uuid).one_or_none()
         if block:
+            logger.info('Executing Block #%s', block.number)
             if block.type == 'song':
                 if self.player.stop_song():
                     old_history = self.db.query(PlayHistory).order_by(PlayHistory.time_played.desc()).first()
@@ -188,7 +216,8 @@ class MusicBlocks(object):
                         playing_uid = ''
                 sleep(1)
         except KeyboardInterrupt:
-            print('Exiting')
+            logger.info('Exiting')
+        self.stop_block()
         self.red.set('mb_active', 'False')
         self.red.set('mb_playing', 'Not Playing')
         self.red.publish('player_status', 'active')
