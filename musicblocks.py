@@ -41,12 +41,13 @@ class Player(object):
         self._playing = False
         self._quit = False
         self.current_file = ''
+        self.max_real_vol = 20.0
         try:
             self._player = Popen(['mpg123', '-R', 'Player'], stdin=PIPE, stdout=DEVNULL)
         except OSError:
             call(['apt-get install mpg123 -y'], shell=True)
             self._player = Popen(['mpg123', '-R', 'Player'], stdin=PIPE, stdout=DEVNULL)
-        self._player.stdin.write('SILENCE\nV 100.0\n'.encode())
+        self._player.stdin.write('SILENCE\nV {}\n'.format(self.max_real_vol).encode())
         self._player.stdin.flush()
         self._volume = 100.0
 
@@ -64,8 +65,9 @@ class Player(object):
             self._volume = 100.0
         else:
             self._volume = float(value)
+        volume = self.max_real_vol / self._volume
         self._keep_alive()
-        self._player.stdin.write('V {}\n'.format(self._volume).encode())
+        self._player.stdin.write('V {}\n'.format(volume).encode())
         self._player.stdin.flush()
 
     def play_song(self, path):
