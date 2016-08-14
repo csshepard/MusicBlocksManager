@@ -12,10 +12,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models_noflask import Block, PlayHistory
 
+basedir = os.path.abspath(os.path.dirname(__file__))
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-fh = logging.handlers.RotatingFileHandler('musicblocks.log', maxBytes=10000, backupCount=5)
+fh = logging.handlers.RotatingFileHandler(basedir + 'logs/musicblocks.log', maxBytes=10000, backupCount=5)
 fh.setLevel(logging.WARNING)
 
 sh = logging.StreamHandler()
@@ -34,15 +36,18 @@ if os.path.exists('.env'):
     for line in open('.env'):
         var = line.strip().split('=')
         if len(var) == 2:
+            logger.info('%s = %s', var[0], var[1])
             os.environ[var[0]] = var[1]
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-config = os.environ.get('FLASK_CONFIG') or 'development'
+config = os.environ.get('FLASK_CONFIG') or 'production'
 if config == 'production':
+    logger.info('Starting in Production Mode')
     db_url = os.environ.get('DATABASE_URL') or 'sqlite:///{}/musicblocks.sqlite'.format(basedir)
 elif config == 'testing':
+    logger.info('Starting in Testing Mode')
     db_url = os.environ.get('TEST_DATABASE_URL') or 'sqlite:///{}/musicblocks-test.sqlite'.format(basedir)
 else:
+    logger.info('Starting in Development Mode')
     db_url = os.environ.get('DEV_DATABASE_URL') or 'sqlite:///{}/musicblocks-dev.sqlite'.format(basedir)
 engine = create_engine(db_url)
 Session = sessionmaker(bind=engine)
