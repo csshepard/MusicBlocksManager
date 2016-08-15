@@ -17,7 +17,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-fh = logging.handlers.RotatingFileHandler(basedir + 'logs/musicblocks.log', maxBytes=10000, backupCount=5)
+fh = logging.handlers.RotatingFileHandler(basedir + '/logs/musicblocks.log', maxBytes=10000, backupCount=5)
 fh.setLevel(logging.WARNING)
 
 sh = logging.StreamHandler()
