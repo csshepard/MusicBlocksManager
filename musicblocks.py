@@ -91,7 +91,7 @@ class Player(object):
             self._volume = 100.0
         else:
             self._volume = float(value)
-        volume = self.max_real_vol / self._volume
+        volume = self.max_real_vol * (self._volume / 100.0)
         self._keep_alive()
         self._player.stdin.write('V {}\n'.format(volume).encode())
         self._player.stdin.flush()
