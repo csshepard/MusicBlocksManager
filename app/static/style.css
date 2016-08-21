@@ -7,3 +7,9 @@
 .active-icon{
     vertical-align: middle;
 }
+
+.title-blocks{
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
