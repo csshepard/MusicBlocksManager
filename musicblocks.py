@@ -132,10 +132,11 @@ class Player(object):
 
     def _keep_alive(self):
         if self._player.poll() is not None:
-            logger.warning('Player Crashed. Restarting')
+            logger.warning('Player Crashed. Return Code: {}.Restarting'.format(self._player.poll()))
             self._player = Popen(['mpg123', '-R', 'Player'], stdin=PIPE, stdout=DEVNULL)
-            self._player.stdin.write('SILENCE\nV {}\n'.format(self._volume).encode())
+            self._player.stdin.write('SILENCE\n'.encode())
             self._player.stdin.flush()
+            self.volume = self._volume
             logger.warning('Player Restarted')
 
 
