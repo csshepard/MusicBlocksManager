@@ -28,6 +28,11 @@
                                 <div class="title-blocks col-md-12"><input class="blocks-list-item" type="hidden" value="{{ block.song.id }}">{{ block.song.title }}</div>
                             </div>
                             {% endfor %}
+			    {% for song in catalog %}
+                            <div class="row list-group-item">
+                                <div class="title-blocks col-md-12"><input class="blocks-list-item" type="hidden" value="{{ song.id }}">{{ song.title }}</div>
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
             </div>

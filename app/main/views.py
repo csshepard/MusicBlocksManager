@@ -43,7 +43,7 @@ def advanced():
 @main.route('/history')
 @main.route('/history/<int:page>')
 def history(page=1):
-    history_pagination = PlayHistory.query.order_by(PlayHistory.time_played.desc()).paginate(page, 10, False)
+    history_pagination = PlayHistory.query.order_by(PlayHistory.time_played.desc()).paginate(page, 25, False)
     return render_template('history.html', history=history_pagination)
 
 
@@ -65,4 +65,5 @@ def manage():
         db.session.commit()
         return redirect(url_for('.manage'))
     blocks = Block.query.order_by(Block.number).all()
-    return render_template('manage.html', blocks=blocks, cs_form=cs_form)
+    catalog = Song.query.filter_by(blocks=None)
+    return render_template('manage.html', blocks=blocks, cs_form=cs_form, catalog=catalog)
