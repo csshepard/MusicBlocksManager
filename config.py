@@ -34,7 +34,7 @@ class ProductionConfig(Config):
     @classmethod
     def init_app(cls, app):
         Config.init_app(app)
-        from werkzeug.contrib.fixers import ProxyFix
+        from werkzeug.middleware.proxy_fix import ProxyFix
         app.wsgi_app = ProxyFix(app.wsgi_app)
 
 config = {
